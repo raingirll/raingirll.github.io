@@ -1,6 +1,6 @@
 const GRID_COLS = 8
-const THUMB_DISPLAY_SIZE = 24
-const GAP = 4
+const THUMB_DISPLAY_SIZE = 32
+const GAP = 16
 const TOTAL_GRID_DIM = GRID_COLS * THUMB_DISPLAY_SIZE + (GRID_COLS - 1) * GAP
 const PIXEL_SIZE = THUMB_DISPLAY_SIZE / 8
 const TOTAL_COMBOS = 2n ** 64n
@@ -21,6 +21,7 @@ document.body.style.display = 'flex'
 document.body.style.flexDirection = 'column'
 document.body.style.justifyContent = 'center'
 document.body.style.alignItems = 'center'
+document.body.style.gap = '10px'
 
 function hashIndex(page, pos) {
   let x = (BigInt(page) << 32n) | BigInt(pos)
@@ -41,16 +42,13 @@ function drawPage(pageIndex) {
     const ox = col * (THUMB_DISPLAY_SIZE + GAP)
     const oy = row * (THUMB_DISPLAY_SIZE + GAP)
 
+    const pixelSize = THUMB_DISPLAY_SIZE / 8
     for (let py = 0; py < 8; py++) {
       for (let px = 0; px < 8; px++) {
         const bit = (comboIndex >> BigInt(py * 8 + px)) & 1n
         if (bit) {
           ctx.fillStyle = '#fff'
-          const x = ox + Math.floor(px * THUMB_DISPLAY_SIZE / 8)
-          const y = oy + Math.floor(py * THUMB_DISPLAY_SIZE / 8)
-          const w = ox + Math.floor((px + 1) * THUMB_DISPLAY_SIZE / 8) - x
-          const h = oy + Math.floor((py + 1) * THUMB_DISPLAY_SIZE / 8) - y
-          ctx.fillRect(x, y, w, h)
+          ctx.fillRect(ox + px * pixelSize, oy + py * pixelSize, pixelSize, pixelSize)
         }
       }
     }
@@ -61,16 +59,13 @@ function drawExpanded() {
   ctx.fillStyle = '#000'
   ctx.fillRect(0, 0, canvas.width, canvas.height)
   const comboIndex = hashIndex(currentPage, expandedThumb)
+  const pixelSize = canvas.width / 8
   for (let py = 0; py < 8; py++) {
     for (let px = 0; px < 8; px++) {
       const bit = (comboIndex >> BigInt(py * 8 + px)) & 1n
       if (bit) {
         ctx.fillStyle = '#fff'
-        const x = Math.floor(px * canvas.width / 8)
-        const y = Math.floor(py * canvas.height / 8)
-        const w = Math.floor((px + 1) * canvas.width / 8) - x
-        const h = Math.floor((py + 1) * canvas.height / 8) - y
-        ctx.fillRect(x, y, w, h)
+        ctx.fillRect(px * pixelSize, py * pixelSize, pixelSize, pixelSize)
       }
     }
   }
@@ -78,14 +73,22 @@ function drawExpanded() {
 
 function prevPage() {
   currentPage = (currentPage - 1n + TOTAL_COMBOS) % TOTAL_COMBOS
-  if (expandedThumb !== null) drawExpanded()
-  else drawPage(currentPage)
+  if (expandedThumb !== null) {
+    drawExpanded()
+    binaryDisplay.textContent = formatBinary(hashIndex(currentPage, expandedThumb))
+  } else {
+    drawPage(currentPage)
+  }
 }
 
 function nextPage() {
   currentPage = (currentPage + 1n) % TOTAL_COMBOS
-  if (expandedThumb !== null) drawExpanded()
-  else drawPage(currentPage)
+  if (expandedThumb !== null) {
+    drawExpanded()
+    binaryDisplay.textContent = formatBinary(hashIndex(currentPage, expandedThumb))
+  } else {
+    drawPage(currentPage)
+  }
 }
 
 const prev = document.createElement('button')
@@ -110,12 +113,21 @@ xButton.onmouseleave = () => { xButton.style.color = '#bbb'; xButton.style.borde
 xButton.onclick = () => {
   expandedThumb = null
   if (xButton.parentNode) xButton.parentNode.removeChild(xButton)
+  binaryDisplay.style.visibility = 'hidden'
   drawPage(currentPage)
 }
+
+const binaryDisplay = document.createElement('div')
+binaryDisplay.style.cssText = 'font-family:monospace;color:#bbb;font-size:1.2rem;margin-bottom:10px;text-align:center;letter-spacing:2px;visibility:hidden;height:1.5rem'
 
 const controls = document.createElement('div')
 controls.appendChild(prev)
 controls.appendChild(next)
+
+function formatBinary(comboIndex) {
+  let bits = comboIndex.toString(2)
+  return bits.padStart(64, '0').split('').reverse().join('')
+}
 
 canvas.addEventListener('click', (e) => {
   if (expandedThumb !== null) return
@@ -131,9 +143,14 @@ canvas.addEventListener('click', (e) => {
   if (cx >= thumbX && cx < thumbX + THUMB_DISPLAY_SIZE && cy >= thumbY && cy < thumbY + THUMB_DISPLAY_SIZE) {
     expandedThumb = row * GRID_COLS + col
     controls.insertBefore(xButton, next)
+    const comboIndex = hashIndex(currentPage, expandedThumb)
+    binaryDisplay.textContent = formatBinary(comboIndex)
+    binaryDisplay.style.visibility = 'visible'
     drawExpanded()
   }
 })
 
+document.body.appendChild(binaryDisplay)
+document.body.appendChild(canvas)
 document.body.appendChild(controls)
 drawPage(currentPage)
