@@ -1,7 +1,6 @@
 const GRID_COLS = 8
 const THUMB_DISPLAY_SIZE = 32
 const GAP = 16
-const TOTAL_GRID_DIM = GRID_COLS * THUMB_DISPLAY_SIZE + (GRID_COLS - 1) * GAP
 const PIXEL_SIZE = THUMB_DISPLAY_SIZE / 8
 const TOTAL_COMBOS = 2n ** 64n
 
@@ -11,8 +10,29 @@ let xButton = null
 const canvas = document.getElementById('glcanvas')
 const ctx = canvas.getContext('2d')
 
-canvas.width = TOTAL_GRID_DIM
-canvas.height = TOTAL_GRID_DIM
+function getGridDim() {
+  const TOTAL_GRID_DIM = GRID_COLS * THUMB_DISPLAY_SIZE + (GRID_COLS - 1) * GAP
+  if (window.innerWidth <= 600) {
+    return Math.floor(TOTAL_GRID_DIM * 0.65)
+  }
+  return TOTAL_GRID_DIM
+}
+
+function resizeCanvas() {
+  const dim = getGridDim()
+  canvas.width = dim
+  canvas.height = dim
+  canvas.style.width = dim + 'px'
+  canvas.style.height = dim + 'px'
+  if (expandedThumb !== null) {
+    drawExpanded()
+  } else {
+    drawPage(currentPage)
+  }
+}
+
+resizeCanvas()
+window.addEventListener('resize', resizeCanvas)
 
 document.body.style.backgroundColor = '#000'
 document.body.style.margin = '0'
@@ -32,17 +52,22 @@ function hashIndex(page, pos) {
 }
 
 function drawPage(pageIndex) {
+  const dim = canvas.width
+  const cellSize = dim / GRID_COLS
+  const thumbSize = cellSize * (THUMB_DISPLAY_SIZE / (THUMB_DISPLAY_SIZE + GAP))
+  const gap = cellSize - thumbSize
+  const pixelSize = thumbSize / 8
+
   ctx.fillStyle = '#000'
-  ctx.fillRect(0, 0, TOTAL_GRID_DIM, TOTAL_GRID_DIM)
+  ctx.fillRect(0, 0, dim, dim)
 
   for (let t = 0; t < 64; t++) {
     const comboIndex = hashIndex(pageIndex, t)
     const col = t % 8
     const row = Math.floor(t / 8)
-    const ox = col * (THUMB_DISPLAY_SIZE + GAP)
-    const oy = row * (THUMB_DISPLAY_SIZE + GAP)
+    const ox = col * cellSize + gap / 2
+    const oy = row * cellSize + gap / 2
 
-    const pixelSize = THUMB_DISPLAY_SIZE / 8
     for (let py = 0; py < 8; py++) {
       for (let px = 0; px < 8; px++) {
         const bit = (comboIndex >> BigInt(py * 8 + px)) & 1n
@@ -56,10 +81,11 @@ function drawPage(pageIndex) {
 }
 
 function drawExpanded() {
+  const dim = canvas.width
   ctx.fillStyle = '#000'
-  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  ctx.fillRect(0, 0, dim, dim)
   const comboIndex = hashIndex(currentPage, expandedThumb)
-  const pixelSize = canvas.width / 8
+  const pixelSize = dim / 8
   for (let py = 0; py < 8; py++) {
     for (let px = 0; px < 8; px++) {
       const bit = (comboIndex >> BigInt(py * 8 + px)) & 1n
@@ -136,13 +162,15 @@ canvas.addEventListener('click', (e) => {
   const scaleY = canvas.height / rect.height
   const cx = (e.clientX - rect.left) * scaleX
   const cy = (e.clientY - rect.top) * scaleY
-  const cellSize = THUMB_DISPLAY_SIZE + GAP
+  const cellSize = canvas.width / GRID_COLS
   const col = Math.floor(cx / cellSize)
   const row = Math.floor(cy / cellSize)
   if (col < 0 || col >= GRID_COLS || row < 0 || row >= GRID_COLS) return
-  const thumbX = col * cellSize
-  const thumbY = row * cellSize
-  if (cx >= thumbX && cx < thumbX + THUMB_DISPLAY_SIZE && cy >= thumbY && cy < thumbY + THUMB_DISPLAY_SIZE) {
+  const thumbSize = cellSize * (THUMB_DISPLAY_SIZE / (THUMB_DISPLAY_SIZE + GAP))
+  const gap = cellSize - thumbSize
+  const thumbX = col * cellSize + gap / 2
+  const thumbY = row * cellSize + gap / 2
+  if (cx >= thumbX && cx < thumbX + thumbSize && cy >= thumbY && cy < thumbY + thumbSize) {
     expandedThumb = row * GRID_COLS + col
     controls.insertBefore(xButton, next)
     const comboIndex = hashIndex(currentPage, expandedThumb)
