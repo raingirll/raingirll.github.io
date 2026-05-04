@@ -259,3 +259,11 @@ body::after {
   transform: scale(1.03);
 }
 
+@media (max-width: 900px) {
+  #badges {
+    flex-wrap: wrap;
+    padding: 10px 15px;
+    gap: 10px;
+  }
+}
+

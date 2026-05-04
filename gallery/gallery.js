@@ -132,8 +132,10 @@ function formatBinary(comboIndex) {
 canvas.addEventListener('click', (e) => {
   if (expandedThumb !== null) return
   const rect = canvas.getBoundingClientRect()
-  const cx = e.clientX - rect.left
-  const cy = e.clientY - rect.top
+  const scaleX = canvas.width / rect.width
+  const scaleY = canvas.height / rect.height
+  const cx = (e.clientX - rect.left) * scaleX
+  const cy = (e.clientY - rect.top) * scaleY
   const cellSize = THUMB_DISPLAY_SIZE + GAP
   const col = Math.floor(cx / cellSize)
   const row = Math.floor(cy / cellSize)
