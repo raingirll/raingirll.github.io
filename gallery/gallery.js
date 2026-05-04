@@ -11,11 +11,9 @@ const canvas = document.getElementById('glcanvas')
 const ctx = canvas.getContext('2d')
 
 function getGridDim() {
-  const TOTAL_GRID_DIM = GRID_COLS * THUMB_DISPLAY_SIZE + (GRID_COLS - 1) * GAP
-  if (window.innerWidth <= 600) {
-    return Math.floor(TOTAL_GRID_DIM * 0.65)
-  }
-  return TOTAL_GRID_DIM
+  const viewportMin = Math.min(window.innerWidth, window.innerHeight)
+  const raw = Math.floor(viewportMin * 0.75)
+  return Math.max(96, Math.floor(raw / 96) * 96)
 }
 
 function resizeCanvas() {
@@ -41,7 +39,7 @@ document.body.style.display = 'flex'
 document.body.style.flexDirection = 'column'
 document.body.style.justifyContent = 'center'
 document.body.style.alignItems = 'center'
-document.body.style.gap = '10px'
+document.body.style.gap = 'clamp(5px, 1vw, 15px)'
 
 function hashIndex(page, pos) {
   let x = (BigInt(page) << 32n) | BigInt(pos)
@@ -120,20 +118,20 @@ function nextPage() {
 const prev = document.createElement('button')
 prev.textContent = 'Prev'
 prev.onclick = prevPage
-prev.style.cssText = 'background:none;border:1px solid #333;color:#bbb;font-family:Inter,sans-serif;font-weight:300;font-size:1rem;padding:8px 16px;cursor:pointer;margin:10px;transition:color 0.3s ease,border-color 0.3s ease'
+prev.style.cssText = 'background:none;border:1px solid #333;color:#bbb;font-family:Inter,sans-serif;font-weight:300;font-size:clamp(0.8rem, 2vw, 1.2rem);padding:clamp(6px, 1vw, 10px) clamp(12px, 2vw, 20px);cursor:pointer;margin:clamp(5px, 1vw, 10px);transition:color 0.3s ease,border-color 0.3s ease'
 prev.onmouseenter = () => { prev.style.color = '#eb7bc0'; prev.style.borderColor = '#eb7bc0' }
 prev.onmouseleave = () => { prev.style.color = '#bbb'; prev.style.borderColor = '#333' }
 
 const next = document.createElement('button')
 next.textContent = 'Next'
 next.onclick = nextPage
-next.style.cssText = 'background:none;border:1px solid #333;color:#bbb;font-family:Inter,sans-serif;font-weight:300;font-size:1rem;padding:8px 16px;cursor:pointer;margin:10px;transition:color 0.3s ease,border-color 0.3s ease'
+next.style.cssText = 'background:none;border:1px solid #333;color:#bbb;font-family:Inter,sans-serif;font-weight:300;font-size:clamp(0.8rem, 2vw, 1.2rem);padding:clamp(6px, 1vw, 10px) clamp(12px, 2vw, 20px);cursor:pointer;margin:clamp(5px, 1vw, 10px);transition:color 0.3s ease,border-color 0.3s ease'
 next.onmouseenter = () => { next.style.color = '#eb7bc0'; next.style.borderColor = '#eb7bc0' }
 next.onmouseleave = () => { next.style.color = '#bbb'; next.style.borderColor = '#333' }
 
 xButton = document.createElement('button')
 xButton.textContent = 'X'
-xButton.style.cssText = 'background:none;border:1px solid #333;color:#bbb;font-family:Inter,sans-serif;font-weight:300;font-size:1rem;padding:8px 16px;cursor:pointer;margin:10px;transition:color 0.3s ease,border-color 0.3s ease'
+xButton.style.cssText = 'background:none;border:1px solid #333;color:#bbb;font-family:Inter,sans-serif;font-weight:300;font-size:clamp(0.8rem, 2vw, 1.2rem);padding:clamp(6px, 1vw, 10px) clamp(12px, 2vw, 20px);cursor:pointer;margin:clamp(5px, 1vw, 10px);transition:color 0.3s ease,border-color 0.3s ease'
 xButton.onmouseenter = () => { xButton.style.color = '#eb7bc0'; xButton.style.borderColor = '#eb7bc0' }
 xButton.onmouseleave = () => { xButton.style.color = '#bbb'; xButton.style.borderColor = '#333' }
 xButton.onclick = () => {
@@ -144,7 +142,7 @@ xButton.onclick = () => {
 }
 
 const binaryDisplay = document.createElement('div')
-binaryDisplay.style.cssText = 'font-family:monospace;color:#bbb;font-size:1.2rem;margin-bottom:10px;text-align:center;letter-spacing:2px;visibility:hidden;height:1.5rem'
+binaryDisplay.style.cssText = 'font-family:monospace;color:#bbb;font-size:clamp(0.6rem, 1.5vw, 1rem);margin-bottom:clamp(5px, 1vw, 10px);text-align:center;letter-spacing:clamp(0.5px, 0.3vw, 2px);visibility:hidden;height:1.5rem;word-break:break-all;overflow-wrap:break-word;max-width:90vw'
 
 const controls = document.createElement('div')
 controls.appendChild(prev)
